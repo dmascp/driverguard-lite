@@ -8,6 +8,7 @@ runs/
 *.cache
 *.onnx
 *_openvino_model/
+!models/best_int8_openvino_model/
 
 # Rahasia
 .env

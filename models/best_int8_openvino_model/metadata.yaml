@@ -1,0 +1,31 @@
+description: Ultralytics YOLO11n model trained on /content/Driver-Monitoring-system-11/data.yaml
+author: Ultralytics
+date: '2026-10-18T10:13:50.672324+00:00'
+version: 8.4.182
+license: AGPL-3.0 License (https://ultralytics.com/license)
+docs: https://docs.ultralytics.com
+stride: 32
+task: detect
+head: Detect
+batch: 1
+imgsz:
+- 640
+- 640
+names:
+  0: Distracted
+  1: Drinking
+  2: Drowsy
+  3: Eating
+  4: PhoneUse
+  5: SafeDriving
+  6: Seatbelt
+  7: Smoking
+args:
+  data: /content/Driver-Monitoring-system-11/data.yaml
+  batch: 1
+  fraction: 1.0
+  quantize: 8
+  nms: null
+  dynamic: false
+channels: 3
+end2end: false
