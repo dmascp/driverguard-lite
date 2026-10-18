@@ -107,7 +107,7 @@ def is_alert(name):
     return name.lower().replace(" ", "").replace("_", "") in ALERT_CLASSES
 
 
-def draw(frame, boxes, names, fps, events, now):
+def draw(frame, boxes, names, fps, infer_ms, events):
     for box in boxes:
         x1, y1, x2, y2 = map(int, box.xyxy[0])
         name = names[int(box.cls[0])]
@@ -117,6 +117,8 @@ def draw(frame, boxes, names, fps, events, now):
                     cv2.FONT_HERSHEY_SIMPLEX, 0.6, color, 2)
 
     cv2.putText(frame, f"FPS: {fps:.1f}", (10, 25), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 255, 0), 2)
+    cv2.putText(frame, f"Model: {infer_ms:.0f} ms (maks {1000 / max(infer_ms, 1e-6):.0f} FPS)", (10, 52),
+                cv2.FONT_HERSHEY_SIMPLEX, 0.6, (255, 255, 0), 2)
     if events:
         text = "PERINGATAN: " + ", ".join(f"{n} ({d:.1f}s)" for n, d in events)
         h, w = frame.shape[:2]
@@ -137,7 +139,7 @@ def main():
                          "Salin best.pt ke folder models/, atau tes dulu dengan --model yolo11n.pt")
 
     LOG_DIR.mkdir(exist_ok=True)
-    model = YOLO(args.model)
+    model = YOLO(args.model, task="detect")
     names = model.names
 
     cap = cv2.VideoCapture(args.camera, cv2.CAP_DSHOW)
@@ -145,6 +147,10 @@ def main():
         cap = cv2.VideoCapture(args.camera)
     if not cap.isOpened():
         raise SystemExit("Webcam tidak bisa dibuka. Coba --camera 1")
+    cap.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc(*"MJPG"))  # banyak webcam lebih cepat di MJPG
+    cap.set(cv2.CAP_PROP_FPS, 30)
+    print(f"Webcam: {int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))}x{int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))}, "
+          f"target {cap.get(cv2.CAP_PROP_FPS):.0f} FPS")
 
     tracker = EventTracker(args.alarm_seconds, LOG_DIR / "events.csv")
     alarm = AlarmThread()
@@ -160,6 +166,7 @@ def main():
                 break
             now = time.time()
             result = model(frame, conf=args.conf, imgsz=640, verbose=False)[0]
+            infer_ms = sum(result.speed.values())  # preprocess + inference + postprocess
 
             detections = {}
             for box in result.boxes:
@@ -172,7 +179,7 @@ def main():
 
             fps = 0.9 * fps + 0.1 * (1.0 / max(now - prev, 1e-6))
             prev = now
-            draw(frame, result.boxes, names, fps, events, now)
+            draw(frame, result.boxes, names, fps, infer_ms, events)
             cv2.imshow("DriverGuard Lite", frame)
             if cv2.waitKey(1) & 0xFF == ord("q"):
                 break
