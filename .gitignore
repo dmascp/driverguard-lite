@@ -1,0 +1,29 @@
+# Dataset (unduh dari Roboflow, jangan di-commit)
+datasets/
+Driver-Monitoring-system-*/
+*.zip
+
+# Output training mentah (cukup simpan best.pt dan grafik pilihan)
+runs/
+*.cache
+*.onnx
+*_openvino_model/
+
+# Rahasia
+.env
+*api_key*
+
+# Rekaman webcam & log pribadi
+recordings/
+*.mp4
+*.avi
+logs/
+
+# Python & sistem
+__pycache__/
+*.pyc
+.venv/
+venv/
+.ipynb_checkpoints/
+.DS_Store
+Thumbs.db
